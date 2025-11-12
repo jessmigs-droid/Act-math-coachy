@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACT Math Coach – Trap Drill Edition</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 16px; line-height: 1.35; }
+  h1 { font-size: 20px; margin: 0 0 8px 0; }
+  h2 { font-size: 18px; margin: 10px 0 6px 0; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .tab { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; }
+  .tab.active { background: #f4f4f4; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+  .btn { padding: 8px 12px; border: 1px solid #333; border-radius: 6px; background: #fff; cursor: pointer; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .muted { color: #555; font-size: 14px; }
+  .mc-option { border: 1px solid #ccc; border-radius: 6px; padding: 8px; margin: 6px 0; cursor: pointer; }
+  .mc-option.correct { border-color: #2a8f2a; background: #f0fff0; }
+  .mc-option.wrong { border-color: #b62626; background: #fff0f0; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .input { width: 120px; padding: 6px; border: 1px solid #ccc; border-radius: 6px; }
+  .pill { display: inline-block; border: 1px solid #ddd; border-radius: 999px; padding: 2px 8px; font-size: 12px; margin-right: 6px; }
+  ul { padding-left: 18px; }
+</style>
+</head>
+<body>
+  <h1>ACT Math Coach – Trap Drill</h1>
+  <div class="muted">Daily trap reps, timer, and mistake log (saved on this device)</div>
+
+  <div class="tabs">
+    <div class="tab active" data-target="#drill">Trap Drill</div>
+    <div class="tab" data-target="#flash">Flashcards</div>
+    <div class="tab" data-target="#practice">Practice Generators</div>
+    <div class="tab" data-target="#log">Mistake Log</div>
+    <div class="tab" data-target="#how">How to Use</div>
+  </div>
+
+  <div id="drill" class="panel active">
+    <div class="card">
+      <h2>Start a Trap Drill</h2>
+      <div class="row">
+        <label>Questions:</label>
+        <select id="qdCount">
+          <option>5</option><option selected>10</option><option>15</option>
+        </select>
+        <label>Timer (minutes):</label>
+        <select id="qdTime">
+          <option>1</option><option selected>2</option><option>3</option><option>5</option>
+        </select>
+        <button class="btn" id="qdStart">Start</button>
+        <span id="qdTimer" class="pill">⏱ 00:00</span>
+        <span id="qdScore" class="pill">Score: 0/0</span>
+      </div>
+      <div id="qdQ" style="margin-top:10px; font-weight:bold;"></div>
+      <div id="qdOpts"></div>
+      <div id="qdFB" class="muted"></div>
+      <div class="btn-row">
+        <button class="btn" id="qdNext" disabled>Next</button>
+        <button class="btn" id="qdEnd" disabled>End Drill</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="flash" class="panel">
+    <div class="card">
+      <h2>Trap Flashcards</h2>
+      <div class="row">
+        <button class="btn" id="fcPrev">Prev</button>
+        <button class="btn" id="fcNext">Next</button>
+        <button class="btn" id="fcFlip">Flip</button>
+        <span id="fcProg" class="pill"></span>
+      </div>
+      <div style="margin-top:10px;">
+        <div><strong id="fcTerm"></strong></div>
+        <div id="fcDef" style="margin-top:6px; display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="practice" class="panel">
+    <div class="card">
+      <h2>Linear vs Exponential (Differences vs Ratios)</h2>
+      <div class="btn-row">
+        <button class="btn" id="genModelNew">New</button>
+        <button class="btn" id="genModelLinear">Linear</button>
+        <button class="btn" id="genModelExp">Exponential</button>
+      </div>
+      <div id="genModelPrompt" style="margin-top:8px;"></div>
+      <div id="genModelFeedback" class="muted"></div>
+    </div>
+    <div class="card">
+      <h2>SOH–CAH–TOA Chooser</h2>
+      <div class="btn-row">
+        <button class="btn" id="genTrigNew">New</button>
+        <button class="btn" data-val="sin" id="gSin">sin</button>
+        <button class="btn" data-val="cos" id="gCos">cos</button>
+        <button class="btn" data-val="tan" id="gTan">tan</button>
+      </div>
+      <div id="genTrigPrompt" style="margin-top:8px;"></div>
+      <div id="genTrigFeedback" class="muted"></div>
+    </div>
+  </div>
+
+  <div id="log" class="panel">
+    <div class="card">
+      <h2>Your Mistake Log (local to this device)</h2>
+      <div id="logList"></div>
+      <div class="btn-row">
+        <button class="btn" id="logClear">Clear Log</button>
+      </div>
+      <div class="muted">Tip: Review these as flashcards until you can say the fix aloud in one sentence.</div>
+    </div>
+  </div>
+
+  <div id="how" class="panel">
+    <div class="card">
+      <h2>How to Use (Daily in 10 Minutes)</h2>
+      <ul>
+        <li><strong>2 min:</strong> Trap Flashcards – flip until no hesitation.</li>
+        <li><strong>5 min:</strong> Trap Drill (10 questions, 2 minutes). Missed questions save to your device.</li>
+        <li><strong>3 min:</strong> Practice Generators – one round of Linear vs Exponential and SOH–CAH–TOA.</li>
+      </ul>
+      <h2>What Counts as a “Trap”</h2>
+      <ul>
+        <li>Domain vs Range swap</li>
+        <li>Similar vs Congruent confusion</li>
+        <li>Wrong trig ratio (cos vs tan)</li>
+        <li>Equal differences vs equal ratios</li>
+        <li>Asymptote rules (horizontal/vertical)</li>
+        <li>Rational vs Irrational “always true”</li>
+        <li>Complex roots sanity check</li>
+        <li>Sum of 1..n formula misuse</li>
+        <li>Repeating-block remainder off-by-one</li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+const TRAPS = [
+  ["Domain vs Range", "Domain is x-values (input). Range is y-values (output). On a distance–time graph, domain = time interval."],
+  ["Similar vs Congruent", "Similar: same angles; sides proportional. Congruent: same angles and same side lengths."],
+  ["Wrong trig ratio (cos vs tan)", "Label O/A/H first; tan = opp/adj, cos = adj/hyp, sin = opp/hyp."],
+  ["Linear vs Exponential (differences vs ratios)", "Linear: equal differences; Exponential: equal ratios. Check both before choosing."],
+  ["Horizontal asymptote rule", "If degrees equal, y = (leading coeff num)/(leading coeff den). If deg<num<deg den, y=0."],
+  ["Vertical asymptotes", "Set denominator = 0 and ensure no factor cancels; those x-values are vertical asymptotes."],
+  ["Rational vs Irrational (always)", "Nonzero rational × irrational = irrational; rational ± irrational = irrational."],
+  ["Complex roots sanity check", "If z is a solution to z^2 = −9, z should be ±3i. Square your candidate to confirm."],
+  ["Sum 1..n", "S_n = n(n+1)/2. Never scale a smaller sum linearly."],
+  ["Repeating-block digit index", "If block length L repeats, k-th digit is the (k mod L)-th (use L when remainder=0)."],
+];
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const tgt = document.querySelector(tab.dataset.target);
+    if (tgt) tgt.classList.add('active');
+  });
+});
+// Drill
+let drill=null, timerId=null;
+function startDrill(){
+  const n = Number(document.getElementById('qdCount').value);
+  const mins = Number(document.getElementById('qdTime').value);
+  const items = shuffle(TRAPS.slice()).slice(0,n);
+  drill = {items, idx:0, correct:0, total:n, timeLeft: mins*60, answered:false};
+  document.getElementById('qdScore').textContent = `Score: 0/${n}`;
+  document.getElementById('qdEnd').disabled = false;
+  newDrillQuestion();
+  startTimer();
+}
+function startTimer(){
+  updateTimer();
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(()=>{
+    if(!drill) return;
+    drill.timeLeft--; updateTimer();
+    if (drill.timeLeft<=0){ endDrill(); }
+  },1000);
+}
+function updateTimer(){
+  const t = drill ? drill.timeLeft : 0;
+  const m = String(Math.floor(t/60)).padStart(2,'0');
+  const s = String(t%60).padStart(2,'0');
+  document.getElementById('qdTimer').textContent = `⏱ ${m}:${s}`;
+}
+function newDrillQuestion(){
+  const qdQ = document.getElementById('qdQ');
+  const qdOpts = document.getElementById('qdOpts');
+  const qdFB = document.getElementById('qdFB');
+  qdFB.textContent = ""; qdOpts.innerHTML = "";
+  const item = drill.items[drill.idx];
+  qdQ.textContent = item[0];
+  const others = TRAPS.filter(t=>t!==item);
+  shuffle(others);
+  const choices = shuffle([item[1], others[0][1], others[1][1], others[2][1]]);
+  choices.forEach(text=>{
+    const div = document.createElement('div');
+    div.className = 'mc-option';
+    div.textContent = text;
+    div.addEventListener('click', ()=>{
+      if (drill.answered) return;
+      drill.answered = true;
+      if (text===item[1]){
+        div.classList.add('correct');
+        drill.correct++;
+        qdFB.textContent = "Correct.";
+      } else {
+        div.classList.add('wrong');
+        qdFB.textContent = "Not quite. Review tip saved to Mistake Log.";
+        saveMistake(item[0], item[1]);
+      }
+      document.getElementById('qdScore').textContent = `Score: ${drill.correct}/${drill.total}`;
+      document.getElementById('qdNext').disabled = false;
+    });
+    qdOpts.appendChild(div);
+  });
+  document.getElementById('qdNext').disabled = true;
+}
+function nextDrill(){
+  if (!drill) return;
+  drill.idx++; drill.answered = false;
+  if (drill.idx>=drill.total){ endDrill(); }
+  else { newDrillQuestion(); }
+}
+function endDrill(){
+  if (!drill) return;
+  clearInterval(timerId); timerId=null;
+  document.getElementById('qdFB').textContent = `Drill ended. Final score: ${drill.correct}/${drill.total}.`;
+  document.getElementById('qdEnd').disabled = true;
+  document.getElementById('qdNext').disabled = true;
+}
+document.getElementById('qdStart').addEventListener('click', startDrill);
+document.getElementById('qdNext').addEventListener('click', nextDrill);
+document.getElementById('qdEnd').addEventListener('click', endDrill);
+// Flashcards
+let fcIdx=0, fcFlip=false;
+function fcRender(){
+  const t = TRAPS[fcIdx];
+  document.getElementById('fcTerm').textContent = t[0];
+  const def = document.getElementById('fcDef');
+  def.textContent = t[1];
+  def.style.display = fcFlip ? 'block' : 'none';
+  document.getElementById('fcProg').textContent = `Card ${fcIdx+1} of ${TRAPS.length}`;
+}
+document.getElementById('fcPrev').addEventListener('click',()=>{ fcIdx=(fcIdx-1+TRAPS.length)%TRAPS.length; fcFlip=false; fcRender(); });
+document.getElementById('fcNext').addEventListener('click',()=>{ fcIdx=(fcIdx+1)%TRAPS.length; fcFlip=false; fcRender(); });
+document.getElementById('fcFlip').addEventListener('click',()=>{ fcFlip=!fcFlip; fcRender(); });
+fcRender();
+// Practice Generators
+let modelState=null;
+function genModel(){
+  const isExp = Math.random()<0.5;
+  if (isExp){
+    const a = Math.floor(Math.random()*8)+2;
+    const r = [2,3,4,5][Math.floor(Math.random()*4)];
+    modelState = {answer:"exponential", values:[a,a*r,a*r*r]};
+  } else {
+    const a = Math.floor(Math.random()*8)+2;
+    const d = Math.floor(Math.random()*8)+2;
+    modelState = {answer:"linear", values:[a,a+d,a+2*d]};
+  }
+  document.getElementById('genModelPrompt').textContent = "Values: " + modelState.values.join(", ");
+  document.getElementById('genModelFeedback').textContent = "";
+}
+document.getElementById('genModelNew').addEventListener('click', genModel);
+document.getElementById('genModelLinear').addEventListener('click', ()=>{
+  if (!modelState) return;
+  document.getElementById('genModelFeedback').textContent = (modelState.answer==="linear" ? "Correct." : "Nope — ratios are constant.");
+});
+document.getElementById('genModelExp').addEventListener('click', ()=>{
+  if (!modelState) return;
+  document.getElementById('genModelFeedback').textContent = (modelState.answer==="exponential" ? "Correct." : "Nope — differences are constant.");
+});
+genModel();
+// Trig chooser
+let trigState=null;
+function genTrig(){
+  const pairs=[["O","A"],["O","H"],["A","H"]];
+  const pick = pairs[Math.floor(Math.random()*pairs.length)];
+  const theta = [20,25,30,35,40,45,50,55,60][Math.floor(Math.random()*9)];
+  let correct="tan";
+  if (pick.includes("O") && pick.includes("H")) correct="sin";
+  if (pick.includes("A") && pick.includes("H")) correct="cos";
+  trigState={pick,theta,correct};
+  document.getElementById('genTrigPrompt').textContent = `θ=${theta}°, known: ${pick.join(" & ")}. Which function finds the third side?`;
+  document.getElementById('genTrigFeedback').textContent="";
+}
+document.getElementById('genTrigNew').addEventListener('click', genTrig);
+document.getElementById('gSin').addEventListener('click',()=>{
+  document.getElementById('genTrigFeedback').textContent = (trigState && trigState.correct==="sin") ? "Correct." : "Label O/A/H first; try again.";
+});
+document.getElementById('gCos').addEventListener('click',()=>{
+  document.getElementById('genTrigFeedback').textContent = (trigState && trigState.correct==="cos") ? "Correct." : "Label O/A/H first; try again.";
+});
+document.getElementById('gTan').addEventListener('click',()=>{
+  document.getElementById('genTrigFeedback').textContent = (trigState && trigState.correct==="tan") ? "Correct." : "Label O/A/H first; try again.";
+});
+genTrig();
+// Mistake Log
+const LOG_KEY="act_math_trap_log";
+function loadLog(){ try{ const raw=localStorage.getItem(LOG_KEY); return raw?JSON.parse(raw):[];}catch(e){return [];} }
+function saveLog(arr){ localStorage.setItem(LOG_KEY, JSON.stringify(arr.slice(-200))); }
+function saveMistake(term,fix){ const log=loadLog(); log.push({ts:Date.now(),term,fix}); saveLog(log); renderLog(); }
+function renderLog(){
+  const holder=document.getElementById('logList');
+  const log=loadLog().slice().reverse();
+  if (log.length===0){ holder.innerHTML="<div class='muted'>No mistakes logged yet. Finish a Trap Drill and missed items will appear here.</div>"; return; }
+  holder.innerHTML = log.map(it=>{
+    const date = new Date(it.ts).toLocaleString();
+    return `<div class="card"><div><strong>${it.term}</strong></div><div class="muted">${date}</div><div>${it.fix}</div></div>`;
+  }).join("");
+}
+document.getElementById('logClear').addEventListener('click', ()=>{
+  if (confirm("Clear the mistake log on this device?")){ saveLog([]); renderLog(); }
+});
+renderLog();
+</script>
+</body>
+</html>
